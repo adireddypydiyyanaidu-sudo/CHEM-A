@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ambulance Traffic Clearance Dashboard</title>
+<style>
+  :root {
+    --bg:#0f1724;
+    --sidebar:#101a30;
+    --card:#19233a;
+    --accent:#38bdf8;
+    --muted:#94a3b8;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{display:flex;min-height:100vh;background:var(--bg);color:#f1f5f9}
+  /* Sidebar */
+  .sidebar{width:220px;background:var(--sidebar);padding:20px;display:flex;flex-direction:column;gap:20px}
+  .sidebar h2{font-size:18px}
+  .sidebar nav a{display:block;padding:10px;border-radius:8px;color:#cbd5e1;text-decoration:none;margin:4px 0}
+  .sidebar nav a:hover{background:rgba(255,255,255,0.08)}
+  /* Main */
+  .main{flex:1;display:flex;flex-direction:column}
+  .topbar{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center}
+  .topbar h1{font-size:20px}
+  .dashboard{padding:20px;display:grid;grid-template-columns:1fr 2fr;gap:20px}
+  /* Cards */
+  .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.4)}
+  .card h3{font-size:16px;margin-bottom:10px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stat{background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;text-align:center}
+  .stat h2{font-size:20px;margin:4px 0}
+  /* Map */
+  .map{display:grid;grid-template-columns:repeat(8,40px);grid-template-rows:repeat(8,40px);gap:4px;justify-content:center}
+  .cell{width:40px;height:40px;border-radius:6px;background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .road{background:#334155}
+  .signal.red{background:#ef4444}
+  .signal.green{background:#22c55e}
+  .ambulance{background:#facc15;color:#111;font-weight:bold}
+  button{cursor:pointer;background:linear-gradient(90deg,#38bdf8,#0ea5e9);color:#022034;font-weight:600;border:none;padding:8px 12px;border-radius:8px;margin-top:8px}
+  /* Responsive */
+  @media(max-width:768px){.dashboard{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>🚦 Control Panel</h2>
+    <nav>
+      <a href="#">Dashboard</a>
+      <a href="#">Live Routes</a>
+      <a href="#">Reports</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <div class="topbar"><h1>Ambulance Traffic Clearance</h1><span id="time"></span></div>
+
+    <div class="dashboard">
+      <!-- Left Column -->
+      <div>
+        <div class="card">
+          <h3>Statistics</h3>
+          <div class="stats">
+            <div class="stat"><p>Active</p><h2 id="activeAmb">1</h2></div>
+            <div class="stat"><p>Cleared</p><h2 id="cleared">0</h2></div>
+            <div class="stat"><p>Pending</p><h2 id="pending">2</h2></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Controls</h3>
+          <button onclick="moveAmbulance()">🚑 Move Ambulance</button>
+          <button onclick="toggleSignals()">🚦 Toggle Signals</button>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="card">
+        <h3>Live Traffic Map</h3>
+        <div id="map" class="map"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Dashboard Clock
+setInterval(()=>{document.getElementById("time").textContent=new Date().toLocaleTimeString()},1000);
+
+// Map setup
+const map=document.getElementById("map");
+const size=8;
+let ambPos={x:0,y:3};
+let signals=[{x:3,y:3,state:"red"},{x:6,y:4,state:"green"}];
+
+function drawMap(){
+  map.innerHTML="";
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      const cell=document.createElement("div");
+      cell.className="cell";
+      // Mark roads
+      if(y===3||x===4){cell.classList.add("road")}
+      // Traffic signals
+      const sig=signals.find(s=>s.x===x&&s.y===y);
+      if(sig){cell.classList.add("signal",sig.state)}
+      // Ambulance
+      if(ambPos.x===x&&ambPos.y===y){cell.classList.add("ambulance");cell.textContent="🚑"}
+      map.appendChild(cell);
+    }
+  }
+}
+
+function moveAmbulance(){
+  if(ambPos.x<size-1){ambPos.x++}
+  else if(ambPos.y<size-1){ambPos.y++}
+  else {ambPos={x:0,y:3}; // reset after reaching end
+    document.getElementById("cleared").textContent++;
+  }
+  drawMap();
+}
+function toggleSignals(){
+  signals.forEach(s=>s.state=s.state==="red"?"green":"red");
+  drawMap();
+}
+
+drawMap();
+</script>
+</body>
+</html>
